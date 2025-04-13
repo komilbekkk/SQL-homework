@@ -4,7 +4,7 @@
 
 --1
 
-select ProductID, ProductName as Name, Price, Category, StockQuantity  from Products ;
+select ProductName as Name from Products ;
 
 --2
 
@@ -54,7 +54,7 @@ select * from Products;
 
 --10
 
-select *, IIF(price > 1000, 'Expensive', 'Effordable') as Indicator from Products; 
+select *, IIF(price > 1000, 'Expensive', 'Affordable') as Indicator from Products; 
 
 --11
 
@@ -75,9 +75,13 @@ select * from Products_Discounted;
 --14
 
 select *, 
-	IIF(SaleAmount > 500, 'Top Tier', 
-	IIF(SaleAmount between 200 and 500, 'Mid Tier', 'Low Tier')) 
-	as Indicator from Sales; 
+	case 
+		when saleAmount = 500 then 'Top Tier'
+		when saleAmount > 1 and saleamount <= 3 then 'Mid Tier' 
+		else 'Low Tier'
+		end as Indicator 
+		from Sales; 
+
 
 --15
 
@@ -89,7 +93,7 @@ select CustomerID  from Orders
 
 select *, 
 	case 
-		when Quantity = 1 then '3%'
-		when Quantity between 1 and 3 then '5%'
-		else '7%' end as Discount
-		from Orders;
+		when Quantity = 1 then 0.03
+		when Quantity > 1 and Quantity <=3 then 0.05
+		else 0.07 end as Discount
+		from Orders 
