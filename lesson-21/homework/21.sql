@@ -1,3 +1,29 @@
+/*
+			Questions
+Write a query to assign a row number to each sale based on the SaleDate.
+Write a query to rank products based on the total quantity sold (use DENSE_RANK())
+Write a query to identify the top sale for each customer based on the SaleAmount.
+Write a query to display each sale's amount along with the next sale amount in the order of SaleDate using the LEAD() function
+Write a query to display each sale's amount along with the previous sale amount in the order of SaleDate using the LAG() function
+Write a query to rank each sale amount within each product category.
+Write a query to identify sales amounts that are greater than the previous sale's amount
+Write a query to calculate the difference in sale amount from the previous sale for every product
+Write a query to compare the current sale amount with the next sale amount in terms of percentage change.
+Write a query to calculate the ratio of the current sale amount to the previous sale amount within the same product.
+Write a query to calculate the difference in sale amount from the very first sale of that product.
+Write a query to find sales that have been increasing continuously for a product (i.e., each sale amount is greater than the previous sale amount for that product).
+Write a query to calculate a "closing balance" for sales amounts which adds the current sale amount to a running total of previous sales.
+Write a query to calculate the moving average of sales amounts over the last 3 sales.
+Write a query to show the difference between each sale amount and the average sale amount.
+Find Employees Who Have the Same Salary Rank
+Identify the Top 2 Highest Salaries in Each Department
+Find the Lowest-Paid Employee in Each Department
+Calculate the Running Total of Salaries in Each Department
+Find the Total Salary of Each Department Without GROUP BY
+Calculate the Average Salary in Each Department Without GROUP BY
+Find the Difference Between an Employee’s Salary and Their Department’s Average
+Calculate the Moving Average Salary Over 3 Employees (Including Current, Previous, and Next)
+Find the Sum of Salaries for the Last 3 Hired Employees*/
 
 -- Lesson 21 WINDOW FUNCTIONS
 
@@ -121,3 +147,82 @@ select *,
 		from ProductSales;
 
 
+--16
+
+With CTE as (
+select *, DENSE_RANK() over (order by salary) as Ranking from Employees1
+)
+Select * from CTE 
+			where Ranking in (
+					select Ranking 
+					from CTE 
+					group by Ranking 
+					having COUNT(Ranking) > 1)
+
+--17
+
+With Top_salary as (
+	select *, ROW_NUMBER() over (partition by department order by salary desc) as Ranking from Employees1
+)
+	Select * from Top_salary where Ranking <= 2;
+--or this this option if there is ties
+
+With Top_salary as (
+	select *, DENSE_RANK() over (partition by department order by salary desc) as Ranking from Employees1
+)
+	Select * from Top_salary where Ranking <= 2;
+
+--18
+
+With Lowest_salary as(
+	select *, DENSE_RANK() over (partition by department order by salary) Ranking from Employees1
+)
+	Select * from Lowest_salary where Ranking = 1;
+
+	--or this option
+
+With Lowest_salary as(
+	select *, DENSE_RANK() over (partition by department order by salary) Ranking from Employees1
+)
+	Select * from Lowest_salary where Ranking = 1;
+
+--19
+
+select *, SUM(salary) over (partition by department order by EmployeeID) RunningTotal from Employees1
+
+--20
+select *, SUM(salary) over (partition by department) RunningTotal from Employees1;
+
+--21
+
+select *, CAST(Round(AVG(salary) over (partition by department), 2) as decimal(10,2)) as AVG_salary from Employees1 
+
+--22
+
+select *, 
+		Salary - CAST(Round(AVG(salary) 
+		over (partition by department), 2) as decimal(10,2)) as Difference_AVG_salary 
+		from Employees1;
+
+--23
+
+select *, 
+		CAST(ROUND(AVG(salary) 
+		over (
+		order by employeeID 
+		rows between 1 preceding and 1 following), 2) as decimal(10,2)) 
+		from Employees1;
+
+--24
+
+With Last_emp as (
+	Select *, ROW_NUMBER() over (order by HireDate desc) Ranking from Employees1
+)
+	select EmployeeID, Name, SUM(salary) over () as SUM_salary  from Last_emp where Ranking <= 3;
+
+--or
+
+With Last_emp as (
+	Select *, ROW_NUMBER() over (order by HireDate desc) Ranking from Employees1
+)
+	select SUM(salary) as SUM_salary  from Last_emp where Ranking <= 3;
